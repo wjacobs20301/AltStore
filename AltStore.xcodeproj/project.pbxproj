@@ -441,8 +441,6 @@
 		D57F2C9426E01BC700B9FA39 /* UIDevice+Vibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57F2C9326E01BC700B9FA39 /* UIDevice+Vibration.swift */; };
 		D57FE84428C7DB7100216002 /* ErrorLogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57FE84328C7DB7100216002 /* ErrorLogViewController.swift */; };
 		D58032EE2AB241D100878F5E /* AnisetteError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58032ED2AB241D100878F5E /* AnisetteError.swift */; };
-		D5A27C022E51A00100AA2702 /* AnisetteServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A27C012E51A00100AA2701 /* AnisetteServerClient.swift */; };
-		D5A27C042E51A00100AA2704 /* AnisetteIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A27C032E51A00100AA2703 /* AnisetteIdentity.swift */; };
 		D58032F02AB2429D00878F5E /* ProcessInfo+Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58032EF2AB2429D00878F5E /* ProcessInfo+Device.swift */; };
 		D586D39B28EF58B0000E101F /* AltTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D586D39A28EF58B0000E101F /* AltTests.swift */; };
 		D58916FE28C7C55C00E39C8B /* LoggedError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58916FD28C7C55C00E39C8B /* LoggedError.swift */; };
@@ -465,6 +463,8 @@
 		D5A1D2EB2AA513410066CACC /* URL+Tools.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1D2EA2AA513410066CACC /* URL+Tools.swift */; };
 		D5A1D2EC2AA51D490066CACC /* ProcessError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FB7A1B2AA284ED00EF863D /* ProcessError.swift */; };
 		D5A2193429B14F94002229FC /* DeprecatedAPIs.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A2193329B14F94002229FC /* DeprecatedAPIs.swift */; };
+		D5A27C022E51A00100AA2702 /* AnisetteServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A27C012E51A00100AA2701 /* AnisetteServerClient.swift */; };
+		D5A27C042E51A00100AA2704 /* AnisetteIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A27C032E51A00100AA2703 /* AnisetteIdentity.swift */; };
 		D5A299862AAB9E4E00A3988D /* Process+Conveniences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59A6B802AA92D1C00F61259 /* Process+Conveniences.swift */; };
 		D5A299872AAB9E4E00A3988D /* ProcessError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FB7A1B2AA284ED00EF863D /* ProcessError.swift */; };
 		D5A299882AAB9E4E00A3988D /* JITError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A1D2E32AA50EB60066CACC /* JITError.swift */; };
@@ -1160,8 +1160,6 @@
 		D57F2C9326E01BC700B9FA39 /* UIDevice+Vibration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIDevice+Vibration.swift"; sourceTree = "<group>"; };
 		D57FE84328C7DB7100216002 /* ErrorLogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorLogViewController.swift; sourceTree = "<group>"; };
 		D58032ED2AB241D100878F5E /* AnisetteError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteError.swift; sourceTree = "<group>"; };
-		D5A27C012E51A00100AA2701 /* AnisetteServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteServerClient.swift; sourceTree = "<group>"; };
-		D5A27C032E51A00100AA2703 /* AnisetteIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteIdentity.swift; sourceTree = "<group>"; };
 		D58032EF2AB2429D00878F5E /* ProcessInfo+Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+Device.swift"; sourceTree = "<group>"; };
 		D581822C2A218A140087965B /* AltStore 13.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "AltStore 13.xcdatamodel"; sourceTree = "<group>"; };
 		D586D39828EF58B0000E101F /* AltTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AltTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1186,6 +1184,8 @@
 		D5A1D2E82AA512940066CACC /* RemoteServiceDiscoveryTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteServiceDiscoveryTunnel.swift; sourceTree = "<group>"; };
 		D5A1D2EA2AA513410066CACC /* URL+Tools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Tools.swift"; sourceTree = "<group>"; };
 		D5A2193329B14F94002229FC /* DeprecatedAPIs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeprecatedAPIs.swift; sourceTree = "<group>"; };
+		D5A27C012E51A00100AA2701 /* AnisetteServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteServerClient.swift; sourceTree = "<group>"; };
+		D5A27C032E51A00100AA2703 /* AnisetteIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteIdentity.swift; sourceTree = "<group>"; };
 		D5A57C2D2D5177670058285D /* AppVersionValues.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppVersionValues.swift; sourceTree = "<group>"; };
 		D5A645202AF591980047D980 /* UTType+AltStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UTType+AltStore.swift"; sourceTree = "<group>"; };
 		D5A645222AF5B5C50047D980 /* PatreonAPI+Responses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PatreonAPI+Responses.swift"; sourceTree = "<group>"; };
@@ -3882,7 +3882,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 84;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 6XVY5G3U44;
+				DEVELOPMENT_TEAM = WZGFAS88V7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -3935,7 +3935,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 84;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 6XVY5G3U44;
+				DEVELOPMENT_TEAM = WZGFAS88V7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -4497,7 +4497,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 6XVY5G3U44;
+				DEVELOPMENT_TEAM = WZGFAS88V7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = AltXPC/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4528,7 +4528,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 6XVY5G3U44;
+				DEVELOPMENT_TEAM = WZGFAS88V7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = AltXPC/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -4676,7 +4676,7 @@
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = 6XVY5G3U44;
+				DEVELOPMENT_TEAM = WZGFAS88V7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -4719,7 +4719,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
 				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = 6XVY5G3U44;
+				DEVELOPMENT_TEAM = WZGFAS88V7;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
