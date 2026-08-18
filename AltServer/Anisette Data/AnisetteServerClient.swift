@@ -61,10 +61,8 @@ final class AnisetteServerClient
     {
         var identity = try self.identityStore.loadIdentity()
         
-        if identity.adiPB == nil
+        if identity.adiPB == nil || identity.clientInfo == nil
         {
-            Logger.main.notice("Provisioning new anisette identity with server \(self.serverURL.absoluteString, privacy: .public)...")
-            
             try await self.provision(&identity)
             try self.identityStore.save(identity)
         }
@@ -81,13 +79,13 @@ final class AnisetteServerClient
             // so throw it away and provision from scratch exactly once.
             Logger.main.error("Anisette server rejected stored provisioning data, re-provisioning. \(error.localizedDescription, privacy: .public)")
             
-            identity.adiPB = nil
-            
             try await self.provision(&identity)
             try self.identityStore.save(identity)
             
             headers = try await self.fetchHeaders(for: identity)
         }
+        
+        guard let clientInfo = identity.clientInfo else { throw AnisetteError.missingValue("clientInfo") }
         
         let anisetteData = ALTAnisetteData(machineID: headers.machineID,
                                            oneTimePassword: headers.oneTimePassword,
@@ -95,7 +93,7 @@ final class AnisetteServerClient
                                            routingInfo: headers.routingInfo,
                                            deviceUniqueIdentifier: identity.deviceID,
                                            deviceSerialNumber: identity.serialNumber,
-                                           deviceDescription: identity.clientInfo,
+                                           deviceDescription: clientInfo,
                                            date: Date(),
                                            locale: .current,
                                            timeZone: .current)
@@ -138,10 +136,38 @@ private extension AnisetteServerClient
     var headersURL: URL {
         return self.serverURL.appendingPathComponent("v3").appendingPathComponent("get_headers")
     }
+    
+    var clientInfoURL: URL {
+        return self.serverURL.appendingPathComponent("v3").appendingPathComponent("client_info")
+    }
 }
 
 private extension AnisetteServerClient
 {
+    func fetchClientInfo() async throws -> (clientInfo: String, userAgent: String?)
+    {
+        var request = URLRequest(url: self.clientInfoURL)
+        request.httpMethod = "GET"
+        
+        let (data, response) = try await self.session.data(for: request)
+        
+        if let response = response as? HTTPURLResponse, !(200 ..< 300).contains(response.statusCode)
+        {
+            throw AnisetteError.anisetteServerFailure(String(format: NSLocalizedString("(HTTP %@)", comment: ""), NSNumber(value: response.statusCode)))
+        }
+        
+        guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            throw AnisetteError.invalidServerResponse(self.serverURL)
+        }
+        
+        guard let clientInfo = json["client_info"] as? String, !clientInfo.isEmpty else {
+            throw AnisetteError.missingValue("clientInfo")
+        }
+        
+        let userAgent = json["user_agent"] as? String
+        return (clientInfo, userAgent)
+    }
+    
     func fetchHeaders(for identity: AnisetteIdentity) async throws -> AnisetteServerHeaders
     {
         guard let adiPB = identity.adiPB else { throw AnisetteError.missingValue("adi.pb") }
@@ -201,6 +227,14 @@ private extension AnisetteServerClient
 {
     func provision(_ identity: inout AnisetteIdentity) async throws
     {
+        // The server's ADI library impersonates a particular Mac, and Apple ties the provisioning to
+        // the client info we present while doing it. Take the server's word for what that is rather
+        // than inventing one, or the anisette data it generates won't match what we claim to be.
+        let clientInfo = try await self.fetchClientInfo()
+        identity.setClientInfo(clientInfo.clientInfo, userAgent: clientInfo.userAgent)
+        
+        Logger.main.notice("Provisioning anisette identity with server \(self.serverURL.absoluteString, privacy: .public) as \(clientInfo.clientInfo, privacy: .public)...")
+        
         let webSocketTask = self.session.webSocketTask(with: self.provisioningSessionURL)
         webSocketTask.resume()
         
@@ -270,7 +304,7 @@ private extension AnisetteServerClient
         var request = URLRequest(url: AnisetteServerClient.grandSlamLookupURL)
         request.httpMethod = "GET"
         
-        for (key, value) in identity.grandSlamHeaders
+        for (key, value) in try identity.grandSlamHeaders()
         {
             request.setValue(value, forHTTPHeaderField: key)
         }
@@ -312,7 +346,7 @@ private extension AnisetteServerClient
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        for (key, value) in identity.grandSlamHeaders
+        for (key, value) in try identity.grandSlamHeaders()
         {
             request.setValue(value, forHTTPHeaderField: key)
         }

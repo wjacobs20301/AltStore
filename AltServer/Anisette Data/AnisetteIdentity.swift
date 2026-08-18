@@ -14,15 +14,27 @@ import OSLog
 /// The pseudo-device an anisette server provisions on our behalf.
 ///
 /// Apple ties provisioning to the values we report while registering, so every field here must stay
-/// byte-for-byte stable once we've successfully provisioned — including `clientInfo`, which is
-/// deliberately *not* derived from the running copy of macOS so that a system update doesn't
-/// invalidate an existing provisioning.
+/// byte-for-byte stable once we've successfully provisioned. In particular `clientInfo` describes the
+/// Mac the *server's* ADI library impersonates, not this one — anisette data generated for one machine
+/// paired with a claim to be another is rejected during the authentication handshake.
 struct AnisetteIdentity: Codable
 {
+    /// Bumped whenever a stored identity is no longer usable and must be provisioned again.
+    /// Version 2 started sourcing `clientInfo` from the server instead of hard-coding it.
+    static let currentVersion = 2
+    
+    /// Absent in identities written before versioning existed, which are all version 1.
+    private(set) var version: Int?
+    
     /// 16 random bytes. Doubles as the ADI identifier and as the seed for `deviceID`/`localUserID`.
     private(set) var identifier: Data
     
-    private(set) var clientInfo: String
+    /// The Mac the anisette server's ADI library impersonates, from its /v3/client_info endpoint.
+    /// Apple validates anisette data against the client info it was provisioned with, so this has to
+    /// be the server's value rather than one we invent, and it has to stay fixed once provisioned.
+    private(set) var clientInfo: String?
+    private(set) var userAgent: String?
+    
     private(set) var serialNumber: String
     
     var adiPB: Data?
@@ -38,20 +50,35 @@ struct AnisetteIdentity: Codable
             bytes = (0 ..< 16).map { _ in UInt8.random(in: UInt8.min ... UInt8.max) }
         }
         
+        self.version = AnisetteIdentity.currentVersion
         self.identifier = Data(bytes)
-        self.clientInfo = AnisetteIdentity.defaultClientInfo
+        self.clientInfo = nil
+        self.userAgent = nil
         self.serialNumber = AnisetteIdentity.defaultSerialNumber
+        self.adiPB = nil
+    }
+    
+    /// Records the identity the server told us to present. Clears any existing provisioning, which was
+    /// bound to the previous client info and would no longer be accepted.
+    mutating func setClientInfo(_ clientInfo: String, userAgent: String?)
+    {
+        self.clientInfo = clientInfo
+        self.userAgent = userAgent
         self.adiPB = nil
     }
 }
 
 extension AnisetteIdentity
 {
-    /// Matches the X-Mme-Client-Info format Xcode sends. Frozen on purpose — see the type's documentation.
-    static let defaultClientInfo = "<MacBookPro18,3> <macOS;13.4.0;22F66> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>"
-    
     /// Anisette servers don't provide a serial number, and Apple accepts "0" for provisioned pseudo-devices.
     static let defaultSerialNumber = "0"
+    
+    /// Used only for the client_info request itself, before the server has told us what to impersonate.
+    static let defaultUserAgent = "akd/1.0 CFNetwork/808.1.4 Darwin/16.1.0"
+    
+    var isCurrentVersion: Bool {
+        return (self.version ?? 1) == AnisetteIdentity.currentVersion
+    }
     
     var identifierBase64: String {
         return self.identifier.base64EncodedString()
@@ -76,14 +103,17 @@ extension AnisetteIdentity
     }
     
     /// Headers Apple's GrandSlam endpoints expect on every provisioning request.
-    var grandSlamHeaders: [String: String] {
+    func grandSlamHeaders() throws -> [String: String]
+    {
+        guard let clientInfo = self.clientInfo else { throw AnisetteError.missingValue("clientInfo") }
+        
         let dateFormatter = ISO8601DateFormatter()
         
         return [
             "Content-Type": "text/x-xml-plist",
             "Accept": "*/*",
-            "User-Agent": "akd/1.0 CFNetwork/808.1.4 Darwin/16.1.0",
-            "X-Mme-Client-Info": self.clientInfo,
+            "User-Agent": self.userAgent ?? AnisetteIdentity.defaultUserAgent,
+            "X-Mme-Client-Info": clientInfo,
             "X-Mme-Device-Id": self.deviceID,
             "X-Apple-I-MD-LU": self.localUserID,
             "X-Apple-I-SRL-NO": self.serialNumber,
@@ -121,6 +151,16 @@ final class AnisetteIdentityStore
             {
                 let data = try Data(contentsOf: self.fileURL)
                 let identity = try PropertyListDecoder().decode(AnisetteIdentity.self, from: data)
+                
+                guard identity.isCurrentVersion else
+                {
+                    Logger.main.notice("Discarding anisette identity provisioned by an older version of AltServer.")
+                    
+                    let identity = AnisetteIdentity()
+                    try self._save(identity)
+                    return identity
+                }
+                
                 return identity
             }
             catch
