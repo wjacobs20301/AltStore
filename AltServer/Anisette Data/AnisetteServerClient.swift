@@ -61,7 +61,9 @@ final class AnisetteServerClient
     {
         var identity = try self.identityStore.loadIdentity()
         
-        if identity.adiPB == nil || identity.clientInfo == nil
+        // Also re-provisions when the configured server changed, since the stored client info and
+        // adi.pb belong to whichever server issued them.
+        if !identity.isProvisioned(by: self.serverURL)
         {
             try await self.provision(&identity)
             try self.identityStore.save(identity)
@@ -231,7 +233,7 @@ private extension AnisetteServerClient
         // the client info we present while doing it. Take the server's word for what that is rather
         // than inventing one, or the anisette data it generates won't match what we claim to be.
         let clientInfo = try await self.fetchClientInfo()
-        identity.setClientInfo(clientInfo.clientInfo, userAgent: clientInfo.userAgent)
+        identity.setClientInfo(clientInfo.clientInfo, userAgent: clientInfo.userAgent, serverURL: self.serverURL)
         
         Logger.main.notice("Provisioning anisette identity with server \(self.serverURL.absoluteString, privacy: .public) as \(clientInfo.clientInfo, privacy: .public)...")
         

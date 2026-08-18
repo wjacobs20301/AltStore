@@ -35,6 +35,10 @@ struct AnisetteIdentity: Codable
     private(set) var clientInfo: String?
     private(set) var userAgent: String?
     
+    /// The server this identity was provisioned against. Each server impersonates a different Mac, so
+    /// an identity is only valid for the one that issued it.
+    private(set) var serverURL: String?
+    
     private(set) var serialNumber: String
     
     var adiPB: Data?
@@ -54,17 +58,25 @@ struct AnisetteIdentity: Codable
         self.identifier = Data(bytes)
         self.clientInfo = nil
         self.userAgent = nil
+        self.serverURL = nil
         self.serialNumber = AnisetteIdentity.defaultSerialNumber
         self.adiPB = nil
     }
     
     /// Records the identity the server told us to present. Clears any existing provisioning, which was
     /// bound to the previous client info and would no longer be accepted.
-    mutating func setClientInfo(_ clientInfo: String, userAgent: String?)
+    mutating func setClientInfo(_ clientInfo: String, userAgent: String?, serverURL: URL)
     {
         self.clientInfo = clientInfo
         self.userAgent = userAgent
+        self.serverURL = serverURL.absoluteString
         self.adiPB = nil
+    }
+    
+    func isProvisioned(by serverURL: URL) -> Bool
+    {
+        guard self.adiPB != nil, self.clientInfo != nil else { return false }
+        return self.serverURL == serverURL.absoluteString
     }
 }
 

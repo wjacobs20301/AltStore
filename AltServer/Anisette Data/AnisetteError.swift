@@ -69,9 +69,11 @@ struct AnisetteError: ALTLocalizedError
             
         case .anisetteServerFailure:
             let baseMessage = NSLocalizedString("The anisette server could not provide anisette data.", comment: "")
-            guard let message = self.value else { return baseMessage }
+            let suggestion = NSLocalizedString("Try a different anisette server by quitting AltServer and running: defaults write com.rileytestut.AltServer AnisetteServerURL <url>", comment: "")
             
-            return baseMessage + " " + message
+            guard let message = self.value else { return baseMessage + "\n\n" + suggestion }
+            
+            return baseMessage + " " + message + "\n\n" + suggestion
             
         case .invalidProvisioningData:
             let baseMessage = NSLocalizedString("The anisette server rejected AltServer's provisioning data.", comment: "")
