@@ -59,6 +59,24 @@ final class AnisetteServerClient
     
     func requestAnisetteData() async throws -> ALTAnisetteData
     {
+        do
+        {
+            // The v1 endpoint returns a complete, self-consistent header set, so there is nothing for
+            // us to derive and no provisioning to keep in sync. Its identity is shared between everyone
+            // using the server, which is why v3 exists, but it avoids every value we'd otherwise guess at.
+            let anisetteData = try await self.fetchAnisetteDataV1()
+            Logger.main.notice("Fetched anisette data from v1 endpoint.")
+            return anisetteData
+        }
+        catch
+        {
+            Logger.main.notice("Anisette server has no usable v1 endpoint, falling back to v3. \(error.localizedDescription, privacy: .public)")
+            return try await self.requestAnisetteDataV3()
+        }
+    }
+    
+    private func requestAnisetteDataV3() async throws -> ALTAnisetteData
+    {
         var identity = try self.identityStore.loadIdentity()
         
         // Also re-provisions when the configured server changed, since the stored client info and
@@ -146,6 +164,67 @@ private extension AnisetteServerClient
 
 private extension AnisetteServerClient
 {
+    func fetchAnisetteDataV1() async throws -> ALTAnisetteData
+    {
+        var request = URLRequest(url: self.serverURL)
+        request.httpMethod = "GET"
+        
+        let (data, response) = try await self.session.data(for: request)
+        
+        if let response = response as? HTTPURLResponse, !(200 ..< 300).contains(response.statusCode)
+        {
+            throw AnisetteError.anisetteServerFailure(String(format: NSLocalizedString("(HTTP %@)", comment: ""), NSNumber(value: response.statusCode)))
+        }
+        
+        guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            throw AnisetteError.invalidServerResponse(self.serverURL)
+        }
+        
+        // Servers disagree on the capitalisation of these keys (X-MMe-Client-Info vs X-Mme-Client-Info)
+        // and on whether numeric values are quoted, so normalise both.
+        var headers = [String: String]()
+        for (key, rawValue) in json
+        {
+            switch rawValue
+            {
+            case let string as String: headers[key.lowercased()] = string
+            case let number as NSNumber: headers[key.lowercased()] = number.stringValue
+            default: break
+            }
+        }
+        
+        func header(_ key: String) -> String? {
+            guard let value = headers[key.lowercased()], !value.isEmpty else { return nil }
+            return value
+        }
+        
+        guard let machineID = header("X-Apple-I-MD-M") else { throw AnisetteError.missingValue("machineID") }
+        guard let oneTimePassword = header("X-Apple-I-MD") else { throw AnisetteError.missingValue("oneTimePassword") }
+        guard let localUserID = header("X-Apple-I-MD-LU") else { throw AnisetteError.missingValue("localUserID") }
+        guard let deviceID = header("X-Mme-Device-Id") else { throw AnisetteError.missingValue("deviceUniqueIdentifier") }
+        guard let clientInfo = header("X-Mme-Client-Info") else { throw AnisetteError.missingValue("clientInfo") }
+        
+        let routingInfo = header("X-Apple-I-MD-RINFO").flatMap { UInt64($0) } ?? AnisetteServerClient.defaultRoutingInfo
+        let serialNumber = header("X-Apple-I-SRL-NO") ?? AnisetteIdentity.defaultSerialNumber
+        
+        // Pair the one-time password with the timestamp the server generated it against, not ours.
+        let date = header("X-Apple-I-Client-Time").flatMap { ISO8601DateFormatter().date(from: $0) } ?? Date()
+        let locale = header("X-Apple-Locale").map { Locale(identifier: $0) } ?? .current
+        let timeZone = header("X-Apple-I-TimeZone").flatMap { TimeZone(abbreviation: $0) ?? TimeZone(identifier: $0) } ?? .current
+        
+        let anisetteData = ALTAnisetteData(machineID: machineID,
+                                           oneTimePassword: oneTimePassword,
+                                           localUserID: localUserID,
+                                           routingInfo: routingInfo,
+                                           deviceUniqueIdentifier: deviceID,
+                                           deviceSerialNumber: serialNumber,
+                                           deviceDescription: clientInfo,
+                                           date: date,
+                                           locale: locale,
+                                           timeZone: timeZone)
+        return anisetteData
+    }
+    
     func fetchClientInfo() async throws -> (clientInfo: String, userAgent: String?)
     {
         var request = URLRequest(url: self.clientInfoURL)
