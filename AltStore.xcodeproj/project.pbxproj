@@ -441,6 +441,8 @@
 		D57F2C9426E01BC700B9FA39 /* UIDevice+Vibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57F2C9326E01BC700B9FA39 /* UIDevice+Vibration.swift */; };
 		D57FE84428C7DB7100216002 /* ErrorLogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57FE84328C7DB7100216002 /* ErrorLogViewController.swift */; };
 		D58032EE2AB241D100878F5E /* AnisetteError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58032ED2AB241D100878F5E /* AnisetteError.swift */; };
+		D5A27C022E51A00100AA2702 /* AnisetteServerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A27C012E51A00100AA2701 /* AnisetteServerClient.swift */; };
+		D5A27C042E51A00100AA2704 /* AnisetteIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A27C032E51A00100AA2703 /* AnisetteIdentity.swift */; };
 		D58032F02AB2429D00878F5E /* ProcessInfo+Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58032EF2AB2429D00878F5E /* ProcessInfo+Device.swift */; };
 		D586D39B28EF58B0000E101F /* AltTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D586D39A28EF58B0000E101F /* AltTests.swift */; };
 		D58916FE28C7C55C00E39C8B /* LoggedError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D58916FD28C7C55C00E39C8B /* LoggedError.swift */; };
@@ -1158,6 +1160,8 @@
 		D57F2C9326E01BC700B9FA39 /* UIDevice+Vibration.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "UIDevice+Vibration.swift"; sourceTree = "<group>"; };
 		D57FE84328C7DB7100216002 /* ErrorLogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorLogViewController.swift; sourceTree = "<group>"; };
 		D58032ED2AB241D100878F5E /* AnisetteError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteError.swift; sourceTree = "<group>"; };
+		D5A27C012E51A00100AA2701 /* AnisetteServerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteServerClient.swift; sourceTree = "<group>"; };
+		D5A27C032E51A00100AA2703 /* AnisetteIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnisetteIdentity.swift; sourceTree = "<group>"; };
 		D58032EF2AB2429D00878F5E /* ProcessInfo+Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ProcessInfo+Device.swift"; sourceTree = "<group>"; };
 		D581822C2A218A140087965B /* AltStore 13.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "AltStore 13.xcdatamodel"; sourceTree = "<group>"; };
 		D586D39828EF58B0000E101F /* AltTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AltTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -2455,6 +2459,8 @@
 			children = (
 				D58032ED2AB241D100878F5E /* AnisetteError.swift */,
 				BFE48974238007CE003239E0 /* AnisetteDataManager.swift */,
+				D5A27C032E51A00100AA2703 /* AnisetteIdentity.swift */,
+				D5A27C012E51A00100AA2701 /* AnisetteServerClient.swift */,
 			);
 			path = "Anisette Data";
 			sourceTree = "<group>";
@@ -3221,6 +3227,8 @@
 				BFAD678E25E0649500D4C4D1 /* ALTDebugConnection.mm in Sources */,
 				BFECAC8524FD950B0077C41F /* Connection.swift in Sources */,
 				D58032EE2AB241D100878F5E /* AnisetteError.swift in Sources */,
+				D5A27C022E51A00100AA2702 /* AnisetteServerClient.swift in Sources */,
+				D5A27C042E51A00100AA2704 /* AnisetteIdentity.swift in Sources */,
 				BF458690229872EA00BD7491 /* AppDelegate.swift in Sources */,
 				BFECAC8424FD950B0077C41F /* ALTConstants.m in Sources */,
 				BF4586C52298CDB800BD7491 /* ALTDeviceManager.mm in Sources */,

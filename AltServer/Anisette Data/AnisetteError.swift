@@ -16,6 +16,10 @@ extension AnisetteError
         
         case aosKitFailure
         case missingValue
+        case anisetteServerFailure
+        case invalidProvisioningData
+        case invalidServerResponse
+        case cancelled
     }
     
     static func aosKitFailure(file: String = #fileID, line: UInt = #line) -> AnisetteError {
@@ -24,6 +28,22 @@ extension AnisetteError
     
     static func missingValue(_ value: String?, file: String = #fileID, line: UInt = #line) -> AnisetteError {
         AnisetteError(code: .missingValue, value: value, sourceFile: file, sourceLine: line)
+    }
+    
+    static func anisetteServerFailure(_ message: String?, file: String = #fileID, line: UInt = #line) -> AnisetteError {
+        AnisetteError(code: .anisetteServerFailure, value: message, sourceFile: file, sourceLine: line)
+    }
+    
+    static func invalidProvisioningData(_ message: String?, file: String = #fileID, line: UInt = #line) -> AnisetteError {
+        AnisetteError(code: .invalidProvisioningData, value: message, sourceFile: file, sourceLine: line)
+    }
+    
+    static func invalidServerResponse(_ serverURL: URL, file: String = #fileID, line: UInt = #line) -> AnisetteError {
+        AnisetteError(code: .invalidServerResponse, value: serverURL.absoluteString, sourceFile: file, sourceLine: line)
+    }
+    
+    static func cancelled(file: String = #fileID, line: UInt = #line) -> AnisetteError {
+        AnisetteError(code: .cancelled, sourceFile: file, sourceLine: line)
     }
 }
 
@@ -46,6 +66,26 @@ struct AnisetteError: ALTLocalizedError
         case .missingValue:
             let valueName = self.value.map { "anisette data value “\($0)”" } ?? NSLocalizedString("anisette data values.", comment: "")
             return String(format: NSLocalizedString("AltServer could not retrieve %@.", comment: ""), valueName)
+            
+        case .anisetteServerFailure:
+            let baseMessage = NSLocalizedString("The anisette server could not provide anisette data.", comment: "")
+            guard let message = self.value else { return baseMessage }
+            
+            return baseMessage + " " + message
+            
+        case .invalidProvisioningData:
+            let baseMessage = NSLocalizedString("The anisette server rejected AltServer's provisioning data.", comment: "")
+            guard let message = self.value else { return baseMessage }
+            
+            return baseMessage + " " + message
+            
+        case .invalidServerResponse:
+            let baseMessage = NSLocalizedString("AltServer received an invalid response while fetching anisette data.", comment: "")
+            guard let serverURL = self.value else { return baseMessage }
+            
+            return String(format: NSLocalizedString("AltServer received an invalid response from %@ while fetching anisette data.", comment: ""), serverURL)
+            
+        case .cancelled: return NSLocalizedString("Fetching anisette data from an anisette server was cancelled.", comment: "")
         }
     }
 }

@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AppKit
 import OSLog
 
 private extension Bundle
@@ -51,6 +52,9 @@ class AnisetteDataManager: NSObject
     private var anisetteDataCompletionHandlers: [String: (Result<ALTAnisetteData, Error>) -> Void] = [:]
     private var anisetteDataTimers: [String: Timer] = [:]
     
+    /// Set when the user declines to use an anisette server, so we only ask once per launch.
+    private var didDeclineAnisetteServer = false
+    
     private lazy var xpcConnection: NSXPCConnection = {
         let connection = NSXPCConnection(serviceName: Bundle.ID.altXPC)
         connection.remoteObjectInterface = NSXPCInterface(with: AltXPCProtocol.self)
@@ -75,6 +79,8 @@ class AnisetteDataManager: NSObject
             }
             catch let aosKitError
             {
+                Logger.main.error("Failed to fetch anisette data via AOSKit. \(aosKitError.localizedDescription, privacy: .public)")
+                
                 // Fall back to XPC in case SIP is disabled.
                 self.requestAnisetteDataFromXPCService { (result) in
                     do
@@ -82,9 +88,11 @@ class AnisetteDataManager: NSObject
                         let anisetteData = try result.get()
                         completion(.success(anisetteData))
                     }
-                    catch CocoaError.xpcConnectionInterrupted
+                    catch
                     {
-                        // SIP and/or AMFI are not disabled, so fall back to Mail plug-in as last resort.
+                        Logger.main.error("Failed to fetch anisette data via XPC service. \(error.localizedDescription, privacy: .public)")
+                        
+                        // SIP and/or AMFI are not disabled, so fall back to Mail plug-in.
                         self.requestAnisetteDataFromPlugin { (result) in
                             do
                             {
@@ -95,17 +103,26 @@ class AnisetteDataManager: NSObject
                             {
                                 Logger.main.error("Failed to fetch anisette data via Mail plug-in. \(error.localizedDescription, privacy: .public)")
                                 
-                                // Return original error.
-                                completion(.failure(aosKitError))
+                                // Every local option has failed, which is expected as of macOS 27:
+                                // AOSKit's retrieveOTPHeadersForDSID: returns error -45070 and an empty
+                                // dictionary, and both remaining paths require SIP and/or AMFI to be disabled.
+                                // Ask an anisette server to generate anisette data for us instead.
+                                self.requestAnisetteDataFromServer { (result) in
+                                    switch result
+                                    {
+                                    case .success(let anisetteData): completion(.success(anisetteData))
+                                        
+                                    case .failure(let error as AnisetteError) where error.code == .cancelled:
+                                        // The user declined to use an anisette server, so report why we needed one.
+                                        completion(.failure(aosKitError))
+                                        
+                                    case .failure(let error):
+                                        Logger.main.error("Failed to fetch anisette data via anisette server. \(error.localizedDescription, privacy: .public)")
+                                        completion(.failure(error))
+                                    }
+                                }
                             }
                         }
-                    }
-                    catch
-                    {
-                        Logger.main.error("Failed to fetch anisette data via XPC service. \(error.localizedDescription, privacy: .public)")
-                        
-                        // Return original error.
-                        completion(.failure(aosKitError))
                     }
                 }
             }
@@ -192,6 +209,69 @@ private extension AnisetteDataManager
         proxy.requestAnisetteData { (anisetteData, error) in
             anisetteData?.sanitize(byReplacingBundleID: Bundle.ID.altXPC)
             completion(Result(anisetteData, error))
+        }
+    }
+    
+    func requestAnisetteDataFromServer(completion: @escaping (Result<ALTAnisetteData, Error>) -> Void)
+    {
+        self.requestAnisetteServerPermission { isAllowed in
+            guard isAllowed else { return completion(.failure(AnisetteError.cancelled())) }
+            
+            let serverURL = UserDefaults.standard.anisetteServerURL
+            Logger.main.notice("Fetching anisette data from anisette server \(serverURL.absoluteString, privacy: .public)...")
+            
+            let client = AnisetteServerClient(serverURL: serverURL)
+            client.requestAnisetteData(completion: completion)
+        }
+    }
+    
+    /// Anisette servers see a device identifier we generate for them, so don't contact one without asking first.
+    func requestAnisetteServerPermission(completion: @escaping (Bool) -> Void)
+    {
+        if let isAllowed = UserDefaults.standard.isAnisetteServerAllowed
+        {
+            return completion(isAllowed)
+        }
+        
+        if self.didDeclineAnisetteServer
+        {
+            return completion(false)
+        }
+        
+        DispatchQueue.main.async {
+            let serverURL = UserDefaults.standard.anisetteServerURL
+            
+            let alert = NSAlert()
+            alert.alertStyle = .informational
+            alert.messageText = NSLocalizedString("Use an Anisette Server?", comment: "")
+            alert.informativeText = String(format: NSLocalizedString("""
+            This version of macOS can no longer generate the anisette data AltServer needs to sign in with your Apple ID, so AltServer can ask an anisette server to generate it instead.
+            
+            AltServer will register a randomly generated device identifier with %@, then send that identifier to it each time you sign in or refresh apps. Your Apple ID and password are never sent to the anisette server.
+            
+            To use a different server, quit AltServer and run:
+            defaults write com.rileytestut.AltServer AnisetteServerURL <url>
+            """, comment: ""), serverURL.absoluteString)
+            
+            alert.addButton(withTitle: NSLocalizedString("Use Anisette Server", comment: ""))
+            alert.addButton(withTitle: NSLocalizedString("Don't Use", comment: ""))
+            
+            NSRunningApplication.current.activate(options: .activateIgnoringOtherApps)
+            
+            let response = alert.runModal()
+            let isAllowed = (response == .alertFirstButtonReturn)
+            
+            if isAllowed
+            {
+                // Only remember approval; declining just skips the server until AltServer is relaunched.
+                UserDefaults.standard.isAnisetteServerAllowed = true
+            }
+            else
+            {
+                self.didDeclineAnisetteServer = true
+            }
+            
+            completion(isAllowed)
         }
     }
     

@@ -49,3 +49,36 @@ extension UserDefaults
         return timeout
     }
 }
+
+// Anisette server, used as a fallback when macOS can't generate anisette data locally.
+extension UserDefaults
+{
+    private static let anisetteServerURLKey = "AnisetteServerURL"
+    private static let isAnisetteServerAllowedKey = "IsAnisetteServerAllowed"
+    
+    static let defaultAnisetteServerURL = URL(string: "https://ani.sidestore.io")!
+    
+    var anisetteServerURL: URL {
+        get {
+            guard let urlString = self.string(forKey: UserDefaults.anisetteServerURLKey),
+                  let url = URL(string: urlString), url.scheme != nil
+            else { return UserDefaults.defaultAnisetteServerURL }
+            
+            return url
+        }
+        set {
+            self.set(newValue.absoluteString, forKey: UserDefaults.anisetteServerURLKey)
+        }
+    }
+    
+    /// `nil` until the user has been asked whether AltServer may use an anisette server.
+    var isAnisetteServerAllowed: Bool? {
+        get {
+            guard let isAllowed = self.object(forKey: UserDefaults.isAnisetteServerAllowedKey) as? Bool else { return nil }
+            return isAllowed
+        }
+        set {
+            self.set(newValue, forKey: UserDefaults.isAnisetteServerAllowedKey)
+        }
+    }
+}

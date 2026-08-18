@@ -35,6 +35,23 @@ AltStore is a just regular, sandboxed iOS application. The AltStore app target c
 ### AltServer
 AltServer is also just a regular, sandboxed macOS application. AltServer is significantly less complex than AltStore though, and for that reason consists of only a handful of files.
 
+#### Anisette data on macOS 27 and later
+Signing in with an Apple ID requires "anisette" data, which AltServer normally generates locally by calling `AOSUtilities.retrieveOTPHeadersForDSID:` in macOS's private AOSKit framework. As of macOS 27 that call returns error `-45070` along with an empty dictionary, so sign-in fails with *"AltServer could not retrieve anisette data value 'machineID'."* The two older fallbacks (the AltXPC service and the Mail plug-in) both go through AuthKit, which requires SIP and/or AMFI to be disabled, so neither helps on a stock install.
+
+When every local option fails, AltServer now asks an [anisette server](https://github.com/SideStore/anisette-servers) to generate anisette data instead. AltServer asks for confirmation before contacting one for the first time, since doing so registers a randomly generated device identifier with a third party — your Apple ID and password are never sent to it. The generated identity is stored in `~/Library/Application Support/com.rileytestut.AltServer/AnisetteIdentity.plist`.
+
+The server defaults to `https://ani.sidestore.io`, and can be changed with:
+
+```
+defaults write com.rileytestut.AltServer AnisetteServerURL <url>
+```
+
+To opt out entirely (AltServer will only ever generate anisette data locally):
+
+```
+defaults write com.rileytestut.AltServer IsAnisetteServerAllowed -bool NO
+```
+
 ### AltKit
 AltKit is a shared framework that includes common code between AltStore and AltServer.
 
