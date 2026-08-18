@@ -152,10 +152,10 @@ private extension AnisetteDataManager
             // -2 = Production environment (via https://github.com/ionescu007/Blackwood-4NT)
             guard let requestHeaders = AOSUtilities.retrieveOTPHeadersForDSID("-2") else { throw AnisetteError.missingValue("oneTimePassword") }
             
-            guard let machineID = requestHeaders["X-Apple-MD-M"] as? String else { throw AnisetteError.missingValue("machineID") }
-            guard let oneTimePassword = requestHeaders["X-Apple-MD"] as? String else { throw AnisetteError.missingValue("oneTimePassword") }
+            guard let machineID = requestHeaders["X-Apple-MD-M"] as? String, !machineID.isEmpty else { throw AnisetteError.missingValue("machineID") }
+            guard let oneTimePassword = requestHeaders["X-Apple-MD"] as? String, !oneTimePassword.isEmpty else { throw AnisetteError.missingValue("oneTimePassword") }
             
-            guard let deviceID = AOSUtilities.machineUDID else { throw AnisetteError.missingValue("deviceUniqueIdentifier") }
+            guard let deviceID = AOSUtilities.machineUDID, !deviceID.isEmpty else { throw AnisetteError.missingValue("deviceUniqueIdentifier") }
             guard let localUserID = deviceID.data(using: .utf8)?.base64EncodedString() else { throw AnisetteError.missingValue("localUserID") }
             
             let serialNumber = AOSUtilities.machineSerialNumber ?? "C02LKHBBFD57" // serialNumber can be nil, so provide valid fallback serial number.

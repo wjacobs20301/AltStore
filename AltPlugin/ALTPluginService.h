@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (class, nonatomic, readonly) ALTPluginService *sharedService;
 
-- (ALTAnisetteData *)requestAnisetteData;
+- (nullable ALTAnisetteData *)requestAnisetteData;
 
 @end
 

@@ -18,7 +18,14 @@ class AltXPC: NSObject, AltXPCProtocol
     
     func requestAnisetteData(completionHandler: @escaping (ALTAnisetteData?, Error?) -> Void)
     {
-        let anisetteData = ALTPluginService.shared.requestAnisetteData()
+        guard let anisetteData = ALTPluginService.shared.requestAnisetteData() else {
+            // Never report (nil, nil): AltServer builds a Result from this pair and traps when both are nil.
+            let error = NSError(domain: "com.rileytestut.AltXPC", code: 1, userInfo: [
+                NSLocalizedDescriptionKey: NSLocalizedString("AuthKit did not return valid anisette data.", comment: "")
+            ])
+            return completionHandler(nil, error)
+        }
+        
         completionHandler(anisetteData, nil)
     }
 }
